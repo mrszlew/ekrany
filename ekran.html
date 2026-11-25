@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ekran WNEiZ UMK</title>
+<link rel="stylesheet" href="ekrany.css">
+<style>
+html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none}
+#ekran{position:fixed;inset:0;background:#000}
+#ekran.ek-view{background:#000}
+#status{position:fixed;right:14px;top:12px;z-index:99;font:600 13px/1.3 Lato,Arial,sans-serif;color:#fff;background:rgba(170,40,150,.92);padding:7px 12px;border-radius:4px;display:none;cursor:default}
+#start{position:fixed;inset:0;z-index:98;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;background:#0050aa;color:#fff;font-family:Lato,Arial,sans-serif;text-align:center;cursor:default}
+#start b{font-size:30px;font-weight:900}#start span{opacity:.8;font-size:17px}
+#start button{margin-top:12px;font:900 17px Lato,Arial;letter-spacing:.08em;text-transform:uppercase;background:#fff;color:#0050aa;border:0;padding:16px 30px;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="ekran"></div>
+<div id="status"></div>
+<div id="start" hidden><b>Ekran WNEiZ UMK</b><span>Kliknij, aby włączyć pełny ekran. Pętla już działa w tle.</span><button type="button">Pełny ekran</button></div>
+<script src="config.js"></script>
+<script src="demo.js"></script>
+<script src="qrcode.min.js"></script>
+<script src="silnik.js"></script>
+<script>
+(function(){
+  var E = Ekrany, state = null, player = null, failCount = 0, statusEl = document.getElementById('status');
+  var every = Math.max(20, +(E.cfg.odswiezanie||60)) * 1000;
+  function status(t){ statusEl.textContent = t||''; statusEl.style.display = t ? 'block' : 'none'; }
+  function cacheSave(st){ try { localStorage.setItem('ekrany-kopia', JSON.stringify({t:Date.now(), raw:st._raw})); } catch(e){} }
+  function cacheLoad(){ try { var c = JSON.parse(localStorage.getItem('ekrany-kopia')||'null'); return c && c.raw ? E.normalize(c.raw) : null; } catch(e){ return null; } }
+  function rawLoad(){
+    if (!E.connected()) return Promise.resolve(window.EKRANY_DEMO || {});
+    return fetch(E.cfg.url + (E.cfg.url.indexOf('?')<0?'?':'&') + 'a=dane&t=' + Date.now(), {cache:'no-store', redirect:'follow'})
+      .then(function(r){ if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(j){ if (!j || j.ok===false) throw new Error((j&&j.error)||'błąd skryptu'); return j; });
+  }
+  function apply(raw){
+    var st = E.normalize(raw); st._raw = raw;
+    var changed = !state || state.rev !== st.rev || !st.rev;
+    state = st;
+    if (!player){ player = new E.Player(document.getElementById('ekran'), function(){ return state; }, {persist:true}); player.start(); }
+    else if (changed){ player.refreshFoot(); }   // nowa treść wejdzie od następnego slajdu, bez przeładowania
+    if (changed && E.connected()) cacheSave(st);
+  }
+  function tick(){
+    rawLoad().then(function(raw){ failCount = 0; status(E.connected() ? '' : 'Tryb pokazowy: uzupełnij adres skryptu w config.js'); apply(raw); })
+      .catch(function(err){
+        failCount++;
+        if (!state){ var c = cacheLoad(); if (c){ state = c; apply(c._raw || {}); } }
+        if (!state) apply({});
+        if (failCount >= 3) status('Brak połączenia z arkuszem - wyświetlam ostatnią zapisaną treść');
+        if (window.console) console.warn('[ekrany]', err);
+      })
+      .then(function(){ setTimeout(tick, every); });
+  }
+  if (!E.connected()) status('Tryb pokazowy: uzupełnij adres skryptu w config.js');
+  tick();
+  /* raz na dobę pełne przeładowanie (o 4:00) na wypadek wycieków pamięci przeglądarki */
+  setInterval(function(){ var d = new Date(); if (d.getHours()===4 && d.getMinutes()===0 && navigator.onLine) location.reload(); }, 60000);
+  /* klawisze: spacja pauza, strzałki, F pełny ekran */
+  document.addEventListener('keydown', function(e){
+    if (!player) return;
+    if (e.key===' '){ e.preventDefault(); status(player.togglePause() ? 'Pauza (spacja wznawia)' : ''); }
+    else if (e.key==='ArrowRight') player.go(1);
+    else if (e.key==='ArrowLeft') player.go(-1);
+    else if (e.key==='f' || e.key==='F') fs();
+  });
+  var start = document.getElementById('start');
+  function fs(){ var d = document.documentElement; if (!document.fullscreenElement && d.requestFullscreen) d.requestFullscreen().catch(function(){}); start.hidden = true; }
+  if (!/[?&]kiosk/.test(location.search) && !document.fullscreenElement && window.innerHeight < screen.height - 4){ start.hidden = false; start.addEventListener('click', fs); setTimeout(function(){ start.hidden = true; }, 15000); }
+  /* kursor znika po 3 s bezruchu */
+  var ct; document.addEventListener('mousemove', function(){ document.body.style.cursor = 'default'; clearTimeout(ct); ct = setTimeout(function(){ document.body.style.cursor = 'none'; }, 3000); });
+})();
+</script>
+</body>
+</html>

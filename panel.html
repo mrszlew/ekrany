@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel ekranów WNEiZ UMK</title>
+<link rel="stylesheet" href="ekrany.css">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Lato,'Helvetica Neue',Arial,sans-serif;color:#0b1f3a;background:#f2f6fc;font-size:15px;line-height:1.45;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:#0050aa}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2px solid #0050aa;background:#fff;color:#0050aa;font-weight:700;padding:8px 14px;border-radius:6px;cursor:pointer;white-space:nowrap;text-decoration:none;font-size:14px}
+.btn:hover{background:#eef4fc}
+.btn.pri{background:#0050aa;color:#fff}.btn.pri:hover{background:#00418c}
+.btn.ghost{border-color:transparent;background:transparent}.btn.ghost:hover{background:#e3ecf8}
+.btn.dan{border-color:#c0282f;color:#c0282f}.btn.dan:hover{background:#fdecec}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #9ec5f8;outline-offset:1px}
+/* blokada */
+#lock{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(180deg,#1b64c2,#0050aa 50%,#00347a);position:relative;overflow:hidden}
+#lock::before,#lock::after{content:"";position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.18)}
+#lock::before{width:760px;height:760px;right:-200px;top:-220px}#lock::after{width:420px;height:420px;right:-30px;top:-50px;border-color:rgba(255,255,255,.4)}
+.lockbox{position:relative;z-index:1;background:#fff;width:100%;max-width:400px;padding:34px 32px 28px;box-shadow:16px 16px 0 #003c88}
+.lockbox img{height:62px;display:block;margin-bottom:22px}
+.lockbox h1{margin:0 0 4px;font-size:24px;font-weight:900;color:#0050aa}
+.lockbox p{margin:0 0 20px;color:#5d7aa6}
+.lockbox label{display:block;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;margin:14px 0 6px;color:#33496b}
+.lockbox input{width:100%;padding:12px 14px;border:2px solid #d5deee;border-radius:6px;font-size:18px}
+.lockbox input#pin{letter-spacing:.4em;font-weight:900}
+.lockbox .btn{width:100%;justify-content:center;margin-top:20px;padding:13px}
+.err{color:#c0282f;font-weight:700;min-height:22px;margin-top:10px;font-size:14px}
+/* układ */
+header{position:sticky;top:0;z-index:30;background:#fff;border-bottom:4px solid #0050aa;display:flex;align-items:center;gap:18px;padding:10px 24px;flex-wrap:wrap}
+header img{height:44px}
+header h1{margin:0;font-size:18px;font-weight:900;color:#0050aa;line-height:1.1}
+header h1 small{display:block;font-weight:400;font-size:13px;color:#5d7aa6}
+.hsp{flex:1}
+#sync{font-size:13px;color:#5d7aa6;text-align:right;line-height:1.3}
+#sync b{color:#0b1f3a}
+#sync.dirty b{color:#aa2896}
+nav{display:flex;gap:4px;padding:0 24px;background:#fff;border-bottom:1px solid #d5deee;overflow-x:auto}
+nav button{border:0;background:none;padding:14px 16px 12px;font-weight:700;color:#5d7aa6;border-bottom:4px solid transparent;cursor:pointer;white-space:nowrap}
+nav button[aria-selected=true]{color:#0050aa;border-bottom-color:#0050aa}
+nav button .cnt{display:inline-block;min-width:22px;padding:1px 6px;border-radius:11px;background:#e3ecf8;color:#0050aa;font-size:12px;margin-left:6px}
+nav button.alarm .cnt{background:#aa2896;color:#fff}
+main{max-width:1280px;margin:0 auto;padding:24px}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.bar h2{margin:0;font-size:22px;font-weight:900;color:#0050aa;margin-right:auto}
+.hint{color:#5d7aa6;font-size:14px;margin:-8px 0 18px}
+.banner{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:12px 16px;border-radius:6px;margin-bottom:16px;font-weight:700}
+.banner.warn{background:#fbeaf7;color:#7a1c6c;border:2px solid #aa2896}
+.banner.info{background:#e3ecf8;color:#003c88;border:2px solid #9ec5f8}
+.banner .btn{margin-left:auto}
+/* lista slajdów */
+.slides{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.card{background:#fff;border:2px solid #d5deee;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:#9ec5f8}
+.card.off{opacity:.55}
+.card.drag{opacity:.4}.card.over{border-color:#0050aa;box-shadow:0 0 0 3px #9ec5f8}
+.mini{position:relative;aspect-ratio:16/9;background:#e9eef6;cursor:pointer}
+.mini .ek-stage{pointer-events:none}
+.card .meta{padding:10px 12px 4px;display:flex;align-items:center;gap:8px}
+.card .meta .no{font-weight:900;color:#0050aa;font-size:13px}
+.tag{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:3px;background:#e3ecf8;color:#0050aa}
+.tag.mag{background:#fbeaf7;color:#aa2896}
+.tag.grey{background:#eceff3;color:#66748a}
+.card .ttl{padding:0 12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:22px}
+.card .acts{display:flex;align-items:center;gap:2px;padding:8px 8px 10px;margin-top:auto}
+.card .acts .sp{flex:1}
+.ico{border:0;background:none;width:34px;height:34px;border-radius:6px;cursor:pointer;color:#33496b;display:inline-flex;align-items:center;justify-content:center;font-size:17px}
+.ico:hover{background:#eef4fc;color:#0050aa}
+.ico.del:hover{background:#fdecec;color:#c0282f}
+.handle{cursor:grab}
+.sw{position:relative;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:13px;user-select:none}
+.sw input{position:absolute;opacity:0;width:1px;height:1px}
+.f>label.sw{display:inline-flex;text-transform:none;letter-spacing:0;font-size:14px;color:#0b1f3a;margin:0}
+.sw i{display:inline-block;width:38px;height:22px;border-radius:11px;background:#c6d1e2;position:relative;transition:background .15s;flex:none}
+.sw i::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw input:checked+i{background:#0050aa}.sw input:checked+i::after{transform:translateX(16px)}
+.sw input:focus-visible+i{outline:3px solid #9ec5f8}
+.addcard{border:2px dashed #9ec5f8;background:#f7faff;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:230px;color:#0050aa;font-weight:900;cursor:pointer}
+.addcard:hover{background:#eef4fc;border-color:#0050aa}
+.addcard span{font-size:40px;line-height:1}
+/* okno edycji */
+dialog{border:0;padding:0;border-radius:10px;width:min(1180px,96vw);max-height:94vh;box-shadow:0 30px 80px rgba(0,30,80,.35)}
+dialog::backdrop{background:rgba(0,30,70,.55)}
+.dlg{display:flex;flex-direction:column;max-height:94vh}
+.dlg header{position:static;border-bottom:1px solid #d5deee;padding:14px 20px}
+.dlg header h2{margin:0;font-size:19px;color:#0050aa;font-weight:900}
+.dlg .body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:24px;padding:20px;overflow:auto}
+.dlg footer{display:flex;gap:10px;justify-content:flex-end;padding:14px 20px;border-top:1px solid #d5deee;background:#f7faff}
+.prev{position:sticky;top:0;align-self:start}
+.prev .mini{border-radius:6px;overflow:hidden;box-shadow:0 4px 18px rgba(0,40,100,.15);cursor:default}
+.prev p{color:#5d7aa6;font-size:13px;margin:8px 0 0}
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:6px}
+.types button{border:2px solid #d5deee;background:#fff;border-radius:6px;padding:10px;text-align:left;cursor:pointer;font-weight:700;font-size:14px}
+.types button small{display:block;font-weight:400;color:#5d7aa6;font-size:12px;margin-top:2px}
+.types button[aria-pressed=true]{border-color:#0050aa;background:#eef4fc;color:#0050aa}
+.f{margin-bottom:14px}
+.f>label,.lbl{display:block;font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#33496b;margin-bottom:5px}
+.f>label small,.lbl small{text-transform:none;letter-spacing:0;font-weight:400;color:#5d7aa6;font-size:12px}
+.f input[type=text],.f input[type=url],.f input[type=number],.f input[type=date],.f input[type=time],.f input[type=datetime-local],.f select,.f textarea,.inp{width:100%;padding:9px 11px;border:2px solid #d5deee;border-radius:6px;background:#fff}
+.f textarea{min-height:92px;resize:vertical}
+.f input:focus,.f select:focus,.f textarea:focus,.inp:focus{border-color:#0050aa;outline:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.seg{display:inline-flex;border:2px solid #d5deee;border-radius:6px;overflow:hidden}
+.seg button{border:0;background:#fff;padding:8px 14px;font-weight:700;cursor:pointer;color:#5d7aa6}
+.seg button[aria-pressed=true]{background:#0050aa;color:#fff}
+.imgrow{display:flex;gap:8px}
+.imgrow input{flex:1;min-width:0}
+.note{font-size:13px;color:#5d7aa6;margin-top:5px}
+.note.bad{color:#c0282f;font-weight:700}
+details.more{border-top:1px solid #d5deee;margin-top:6px;padding-top:12px}
+details.more summary{cursor:pointer;font-weight:700;color:#0050aa;margin-bottom:12px}
+/* wydarzenia */
+.evtable{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:2px solid #d5deee;border-radius:8px;overflow:hidden}
+.evtable th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#33496b;background:#f7faff;padding:10px 8px;border-bottom:2px solid #d5deee}
+.evtable td{padding:6px 6px;border-bottom:1px solid #e6ecf5;vertical-align:middle}
+.evtable tr:last-child td{border-bottom:0}
+.evtable tr.past td{background:#f6f7f9}.evtable tr.past input{color:#8592a6}
+.evtable input.inp{padding:7px 8px;border-width:1px}
+.evtable .w-d{width:150px}.evtable .w-t{width:110px}.evtable .w-a{width:66px;text-align:center}.evtable .w-x{width:44px}
+.evstat{font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#8592a6;display:block;margin-top:3px}
+.evstat.on{color:#0050aa}
+/* formularze ustawień */
+.panelbox{background:#fff;border:2px solid #d5deee;border-radius:8px;padding:20px 22px;margin-bottom:18px}
+.panelbox h3{margin:0 0 14px;font-size:17px;color:#0050aa;font-weight:900}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+.alertbox{border-color:#aa2896}
+.alertbox.on{background:#fff7fd}
+.alertbox h3{color:#aa2896}
+#preview{position:relative;aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0b1f3a;color:#fff;padding:12px 20px;border-radius:6px;font-weight:700;z-index:100;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:90vw}
+.toast.ok{background:#0050aa}.toast.bad{background:#c0282f}
+.saving{opacity:.7;pointer-events:none}
+@media (max-width:860px){.dlg .body,.grid2{grid-template-columns:1fr}.prev{position:static}header{padding:10px 14px}main{padding:16px}.row3{grid-template-columns:1fr 1fr}#sync{text-align:left;width:100%;order:5}}
+@media (max-width:700px){.evtable thead{display:none}.evtable tr{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px;border-bottom:1px solid #d5deee}.evtable td{border:0;padding:0}.evtable td.full{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div id="lock">
+  <form class="lockbox" id="lockform" autocomplete="off">
+    <img src="img/logo-wneiz.png" alt="WNEiZ UMK">
+    <h1>Panel ekranów</h1>
+    <p>Treści zapisują się w Arkuszu Google i same pojawiają się na ekranach.</p>
+    <label for="who">Twoje imię <small style="text-transform:none;font-weight:400">(widoczne przy ostatnim zapisie)</small></label>
+    <input id="who" type="text" maxlength="40" autocomplete="name">
+    <label for="pin">PIN</label>
+    <input id="pin" type="password" inputmode="numeric" maxlength="12" required autocomplete="current-password">
+    <button class="btn pri" type="submit">Wejdź</button>
+    <div class="err" id="lockerr" role="alert"></div>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header>
+    <img src="img/logo-wneiz.png" alt="">
+    <h1>Ekrany informacyjne<small>Wydział Nauk Ekonomicznych i Zarządzania UMK</small></h1>
+    <div class="hsp"></div>
+    <div id="sync" aria-live="polite"></div>
+    <button class="btn ghost" id="reload" type="button" title="Pobierz aktualne treści z arkusza">↻ Pobierz z arkusza</button>
+    <a class="btn ghost" id="sheetlink" target="_blank" rel="noopener" hidden>Arkusz ↗</a>
+    <a class="btn" href="ekran.html" target="_blank" rel="noopener">Otwórz ekran ↗</a>
+    <button class="btn pri" id="save" type="button" disabled>Zapisz zmiany</button>
+  </header>
+  <nav role="tablist">
+    <button role="tab" data-tab="slajdy" aria-selected="true">Slajdy<span class="cnt" id="c-sl">0</span></button>
+    <button role="tab" data-tab="wydarzenia" aria-selected="false">Wydarzenia<span class="cnt" id="c-ev">0</span></button>
+    <button role="tab" data-tab="pilne" aria-selected="false" id="tab-pilne">Pilny komunikat<span class="cnt" id="c-al">wył.</span></button>
+    <button role="tab" data-tab="ustawienia" aria-selected="false">Ustawienia</button>
+    <button role="tab" data-tab="podglad" aria-selected="false">Podgląd ekranu</button>
+  </nav>
+  <main>
+    <div id="banners"></div>
+    <section data-pane="slajdy">
+      <div class="bar"><h2>Slajdy w pętli</h2><button class="btn pri" type="button" id="add-slide">+ Nowy slajd</button></div>
+      <p class="hint">Przeciągnij kartę, aby zmienić kolejność. Kliknij miniaturę, aby edytować. Lista wydarzeń wstawia się do pętli automatycznie.</p>
+      <div class="slides" id="slides"></div>
+    </section>
+    <section data-pane="wydarzenia" hidden>
+      <div class="bar"><h2>Nadchodzące wydarzenia</h2><button class="btn" type="button" id="ev-clean">Usuń minione</button><button class="btn pri" type="button" id="ev-add">+ Dodaj wydarzenie</button></div>
+      <p class="hint">Ekran pokazuje po 4 wydarzenia na slajdzie, od najbliższego. Wydarzenie znika 90 minut po rozpoczęciu (bez godziny - po końcu dnia).</p>
+      <table class="evtable"><thead><tr><th class="w-d">Data</th><th class="w-t">Godzina</th><th>Tytuł</th><th>Opis</th><th>Miejsce</th><th class="w-a">Pokaż</th><th class="w-x"></th></tr></thead><tbody id="evbody"></tbody></table>
+    </section>
+    <section data-pane="pilne" hidden>
+      <div class="bar"><h2>Pilny komunikat</h2></div>
+      <div class="grid2">
+        <div class="panelbox alertbox" id="alertbox">
+          <h3>Pasek pilnego komunikatu</h3>
+          <div class="f"><label class="sw"><input type="checkbox" data-set="alertOn"><i></i><span>Włączony na wszystkich ekranach</span></label></div>
+          <div class="f"><label for="s-alertText">Treść</label><textarea id="s-alertText" data-set="alertText" maxlength="300" placeholder="np. Z powodu awarii zajęcia w sali 118 zostają przeniesione do sali 204"></textarea></div>
+          <div class="row">
+            <div class="f"><label for="s-alertLabel">Etykieta</label><input id="s-alertLabel" type="text" data-set="alertLabel" maxlength="24" placeholder="PILNE"></div>
+            <div class="f"><label for="s-alertUntil">Wyłącz automatycznie <small>(opcjonalnie)</small></label><input id="s-alertUntil" type="datetime-local" data-set="alertUntil"></div>
+          </div>
+          <div class="f"><label class="sw"><input type="checkbox" data-set="alertFull"><i></i><span>Pokazuj też jako osobny slajd co 3 slajdy</span></label></div>
+          <p class="note">Po włączeniu kliknij <b>Zapisz zmiany</b>. Ekrany pobiorą komunikat w ciągu minuty.</p>
+        </div>
+        <div><div class="lbl">Tak będzie wyglądał slajd</div><div class="mini" id="alertprev" style="border-radius:8px;overflow:hidden;cursor:default"></div></div>
+      </div>
+    </section>
+    <section data-pane="ustawienia" hidden>
+      <div class="bar"><h2>Ustawienia</h2></div>
+      <div class="grid2">
+        <div>
+          <div class="panelbox">
+            <h3>Dolny pasek</h3>
+            <div class="f"><span class="lbl">Co pokazywać</span><div class="seg" id="barseg"><button type="button" data-v="Przewijany tekst">Przewijany tekst</button><button type="button" data-v="Akredytacje">Akredytacje AACSB i AMBA</button><button type="button" data-v="Brak">Nic</button></div></div>
+            <div class="f"><label for="s-barLabel">Etykieta</label><input id="s-barLabel" type="text" data-set="barLabel" maxlength="24"></div>
+            <div class="f"><label for="s-barText">Tekst <small>(kolejne komunikaty oddziel znakiem |; puste = najbliższe wydarzenie)</small></label><textarea id="s-barText" data-set="barText" rows="3"></textarea></div>
+            <div class="f"><label class="sw"><input type="checkbox" data-set="barOnImages"><i></i><span>Pasek także na pełnych grafikach</span></label></div>
+          </div>
+          <div class="panelbox">
+            <h3>Czasy i rytm pętli</h3>
+            <div class="row">
+              <div class="f"><label for="s-imgDur">Grafika - domyślnie (s)</label><input id="s-imgDur" type="number" min="3" max="600" data-set="imgDur"></div>
+              <div class="f"><label for="s-infoDur">Komunikat - domyślnie (s)</label><input id="s-infoDur" type="number" min="3" max="600" data-set="infoDur"></div>
+            </div>
+            <div class="row3">
+              <div class="f"><label for="s-evEvery">Wydarzenia co ile slajdów</label><input id="s-evEvery" type="number" min="1" max="30" data-set="evEvery"></div>
+              <div class="f"><label for="s-evDur">Czas slajdu wydarzeń (s)</label><input id="s-evDur" type="number" min="4" max="120" data-set="evDur"></div>
+              <div class="f"><label for="s-evDays">Wydarzenia na ile dni naprzód</label><input id="s-evDays" type="number" min="1" max="365" data-set="evDays"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="panelbox">
+            <h3>Kopia zapasowa</h3>
+            <p class="note" style="margin:0 0 12px">Plik JSON z całą zawartością (slajdy, wydarzenia, ustawienia). Wczytanie kopii podmienia treści w panelu; zapisują się dopiero po kliknięciu Zapisz zmiany.</p>
+            <button class="btn" type="button" id="exp">⤓ Pobierz kopię (JSON)</button>
+            <label class="btn" style="margin-left:6px">⤒ Wczytaj kopię<input type="file" id="imp" accept=".json,application/json" hidden></label>
+          </div>
+          <div class="panelbox">
+            <h3>Zmiana PIN-u</h3>
+            <p class="note" style="margin:0 0 12px">PIN jest wspólny dla wszystkich edytujących. Po zmianie przekaż go pozostałym osobom.</p>
+            <div class="row"><input class="inp" id="newpin" type="password" inputmode="numeric" maxlength="12" placeholder="Nowy PIN (4-12 cyfr)" autocomplete="new-password"><button class="btn" type="button" id="setpin">Zmień PIN</button></div>
+          </div>
+          <div class="panelbox">
+            <h3>Połączenie</h3>
+            <p class="note" style="margin:0" id="conninfo"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section data-pane="podglad" hidden>
+      <div class="bar"><h2>Podgląd ekranu</h2><span class="note" style="margin:0">Pokazuje także niezapisane zmiany. Strzałki: poprzedni/następny slajd.</span><button class="btn" type="button" id="pv-prev">←</button><button class="btn" type="button" id="pv-pause">Pauza</button><button class="btn" type="button" id="pv-next">→</button></div>
+      <div id="preview"></div>
+    </section>
+  </main>
+</div>
+
+<dialog id="dlg"><form class="dlg" method="dialog" id="dlgform">
+  <header><h2 id="dlgtitle">Slajd</h2><span class="hsp"></span><label class="sw"><input type="checkbox" id="d-active"><i></i><span>Wyświetlaj</span></label></header>
+  <div class="body">
+    <div id="dlgfields"></div>
+    <div class="prev"><div class="mini" id="dlgprev"></div><p id="dlgnote">Podgląd odświeża się w trakcie pisania. Tekst sam dopasowuje się do miejsca.</p></div>
+  </div>
+  <footer><button class="btn dan" type="button" id="d-del" style="margin-right:auto">Usuń slajd</button><button class="btn ghost" type="button" id="d-cancel">Anuluj</button><button class="btn pri" type="submit" id="d-ok">Gotowe</button></footer>
+</form></dialog>
+
+<script src="config.js"></script>
+<script src="demo.js"></script>
+<script src="qrcode.min.js"></script>
+<script src="silnik.js"></script>
+<script>
+(function(){
+'use strict';
+var E = Ekrany, $ = function(s, r){ return (r||document).querySelector(s); }, $$ = function(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); };
+var st = null, rev = '', dirty = false, pin = '', who = '', remoteRev = '', saving = false, player = null, edit = null, editIdx = -1;
+
+/* ---------- PIN ---------- */
+try { pin = sessionStorage.getItem('ek-pin') || ''; who = localStorage.getItem('ek-who') || ''; } catch(e){}
+$('#who').value = who;
+$('#lockform').addEventListener('submit', function(e){
+  e.preventDefault();
+  var p = $('#pin').value.trim(), btn = $('#lockform .btn'); who = $('#who').value.trim();
+  $('#lockerr').textContent = ''; btn.disabled = true; btn.textContent = 'Sprawdzam…';
+  check(p).then(function(){ pin = p; try { sessionStorage.setItem('ek-pin', p); localStorage.setItem('ek-who', who); } catch(x){} enter(); })
+    .catch(function(err){ $('#lockerr').textContent = err.message; $('#pin').select(); })
+    .then(function(){ btn.disabled = false; btn.textContent = 'Wejdź'; });
+});
+function check(p){
+  if (!E.connected()) return p ? Promise.resolve() : Promise.reject(new Error('Wpisz PIN.'));
+  return E.post({a:'sprawdz', pin:p}).catch(function(err){ if (err.code==='pin'||err.code==='blokada') throw err; throw new Error('Nie udało się połączyć z arkuszem: ' + err.message); });
+}
+function enter(){
+  if (/^https:\/\/docs\.google\.com\//.test(E.cfg.arkusz||'')){ $('#sheetlink').href = E.cfg.arkusz; $('#sheetlink').hidden = false; }
+  $('#lock').hidden = true; $('#app').hidden = false;
+  load(true);
+  setInterval(pollRemote, 60000);
+}
+if (pin){ check(pin).then(enter).catch(function(){ pin = ''; try { sessionStorage.removeItem('ek-pin'); } catch(x){} }); }
+
+/* ---------- dane ---------- */
+function load(first){
+  setSync('Pobieram treści z arkusza…');
+  return E.load().then(function(s){
+    st = s; rev = s.rev; remoteRev = s.rev; setDirty(false); clearBanner('remote'); renderAll();
+    if (!E.connected()) banner('demo', 'info', 'Tryb pokazowy: brak adresu skryptu w config.js. Możesz oglądać i klikać, ale zapis do arkusza jest wyłączony.');
+  }).catch(function(err){
+    setSync('<b>Błąd połączenia</b><br>' + E.esc(err.message));
+    banner('err', 'warn', 'Nie udało się pobrać treści z arkusza (' + E.esc(err.message) + '). Sprawdź adres w config.js i wdrożenie skryptu.', 'Spróbuj ponownie', function(){ clearBanner('err'); load(); });
+  });
+}
+function pollRemote(){
+  if (!E.connected() || saving || document.hidden) return;
+  E.load().then(function(s){
+    if (s.rev === remoteRev) return;
+    remoteRev = s.rev;
+    if (!dirty){ st = s; rev = s.rev; renderAll(); toast('Treści zaktualizowane z arkusza'); }
+    else banner('remote', 'warn', 'Ktoś inny zmienił treści w arkuszu (' + E.esc(s.updated||'przed chwilą') + '). Twoje niezapisane zmiany mogą je nadpisać.', 'Pobierz najnowsze (porzuć moje)', function(){ clearBanner('remote'); load(); });
+  }).catch(function(){});
+}
+function setDirty(v){
+  dirty = v; $('#save').disabled = !v || saving;
+  var s = $('#sync'); s.classList.toggle('dirty', v);
+  if (v) setSync('<b>Niezapisane zmiany</b><br>kliknij Zapisz, aby wysłać na ekrany');
+  else if (st) setSync('<b>Zapisane w arkuszu</b><br>' + (st.updated ? 'ostatnio: ' + E.esc(st.updated) : (E.connected() ? 'połączono' : 'tryb pokazowy')));
+}
+function setSync(h){ $('#sync').innerHTML = h; }
+function changed(){ setDirty(true); renderCounts(); if (player) player.refreshFoot(); }
+window.addEventListener('beforeunload', function(e){ if (dirty){ e.preventDefault(); e.returnValue = ''; } });
+
+$('#save').addEventListener('click', function(){ save(false); });
+function save(force){
+  if (!E.connected()){ toast('Tryb pokazowy: uzupełnij adres skryptu w config.js, aby zapisywać.', 'bad'); return; }
+  saving = true; $('#save').disabled = true; $('#save').textContent = 'Zapisuję…'; document.body.classList.add('saving');
+  E.post({a:'zapisz', pin:pin, rev:rev, wymus:!!force, kto:who, dane:E.denormalize(st)}).then(function(r){
+    rev = r.rev; remoteRev = r.rev; st.updated = r.updated; clearBanner('remote'); clearBanner('conflict');
+    setDirty(false); toast('Zapisano. Ekrany pokażą zmiany w ciągu minuty.', 'ok');
+  }).catch(function(err){
+    if (err.code==='konflikt'){
+      banner('conflict', 'warn', 'Nie zapisano: ' + E.esc(err.message) + ' Możesz pobrać najnowszą wersję (Twoje zmiany przepadną) albo nadpisać arkusz swoją wersją.', 'Nadpisz moją wersją', function(){ clearBanner('conflict'); save(true); });
+    } else if (err.code==='pin'){ toast('PIN został zmieniony. Zaloguj się ponownie.', 'bad'); try { sessionStorage.removeItem('ek-pin'); } catch(x){} setTimeout(function(){ dirty = false; location.reload(); }, 1800); }
+    else toast('Nie udało się zapisać: ' + err.message, 'bad');
+    setDirty(true);
+  }).then(function(){ saving = false; $('#save').textContent = 'Zapisz zmiany'; $('#save').disabled = !dirty; document.body.classList.remove('saving'); });
+}
+$('#reload').addEventListener('click', function(){
+  if (dirty && !confirm('Masz niezapisane zmiany. Pobrać treści z arkusza i je porzucić?')) return;
+  load();
+});
+
+/* ---------- komunikaty ---------- */
+function banner(id, kind, html, btnText, fn){
+  clearBanner(id);
+  var b = document.createElement('div'); b.className = 'banner ' + kind; b.id = 'bn-' + id; b.innerHTML = '<span>' + html + '</span>';
+  if (btnText){ var x = document.createElement('button'); x.type = 'button'; x.className = 'btn sm'; x.textContent = btnText; x.onclick = fn; b.appendChild(x); }
+  $('#banners').appendChild(b);
+}
+function clearBanner(id){ var b = $('#bn-' + id); if (b) b.remove(); }
+var tt;
+function toast(t, kind){ var o = $('.toast'); if (o) o.remove(); var d = document.createElement('div'); d.className = 'toast ' + (kind||''); d.setAttribute('role','status'); d.textContent = t; document.body.appendChild(d); clearTimeout(tt); tt = setTimeout(function(){ d.remove(); }, kind==='bad' ? 6000 : 3200); }
+
+/* ---------- zakładki ---------- */
+$$('nav [role=tab]').forEach(function(b){ b.addEventListener('click', function(){ tab(b.getAttribute('data-tab')); }); });
+function tab(name){
+  $$('nav [role=tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab')===name); });
+  $$('[data-pane]').forEach(function(p){ p.hidden = p.getAttribute('data-pane') !== name; });
+  if (name==='podglad'){ if (!player){ player = new E.Player($('#preview'), function(){ return st; }); player.start(); } }
+  else if (player){ player.destroy(); player = null; $('#preview').innerHTML = ''; }
+  if (name==='pilne') renderAlertPrev();
+}
+$('#pv-next').onclick = function(){ if (player) player.go(1); };
+$('#pv-prev').onclick = function(){ if (player) player.go(-1); };
+$('#pv-pause').onclick = function(){ if (player) this.textContent = player.togglePause() ? 'Wznów' : 'Pauza'; };
+
+/* ---------- render ---------- */
+function renderAll(){ renderSlides(); renderEvents(); renderSettings(); renderCounts(); var pv = $('#preview'); if (player){ player.destroy(); player = new E.Player(pv, function(){ return st; }); player.start(); } $('#conninfo').innerHTML = E.connected() ? 'Skrypt: <code style="word-break:break-all">' + E.esc(E.cfg.url) + '</code>' : 'Brak adresu skryptu w <code>config.js</code> - panel działa w trybie pokazowym.'; }
+function renderCounts(){
+  var now = new Date();
+  $('#c-sl').textContent = st.slides.filter(function(o){ return E.visible(o, now); }).length + '/' + st.slides.length;
+  $('#c-ev').textContent = E.upcoming(st, now).length;
+  var on = E.alertOn(st, now); $('#c-al').textContent = on ? 'WŁ.' : 'wył.'; $('#tab-pilne').classList.toggle('alarm', on);
+  var ab = $('#alertbox'); if (ab) ab.classList.toggle('on', on);
+}
+var TYPE_INFO = {image:'Gotowa grafika 1920×1080', info:'Tytuł, treść, szczegóły', welcome:'Duży napis powitalny', number:'Duża liczba z opisem', countdown:'Licznik do wydarzenia', qr:'Treść z kodem QR', photo:'Zdjęcie w tle i podpis'};
+function slideTitle(o){ return String(o.title||o.accent||'').trim() || (o.type==='image' ? (String(o.image).split('/').pop().split('?')[0] || 'Grafika') : o.number || '(bez tytułu)'); }
+function renderSlides(){
+  var box = $('#slides'), now = new Date();
+  $$('.mini', box).forEach(E.unobserve);
+  box.innerHTML = '';
+  st.slides.forEach(function(o, i){
+    var vis = E.visible(o, now), why = '';
+    if (o.active===false) why = 'wyłączony';
+    else if (!vis){ if (o.from && o.from > E.ymd(now)) why = 'od ' + o.from; else if (o.until && o.until < E.ymd(now)) why = 'wygasł'; else if (o.type==='countdown') why = 'minął termin'; else why = 'niepełny'; }
+    var c = document.createElement('div'); c.className = 'card' + (vis ? '' : ' off'); c.draggable = true; c.dataset.i = i;
+    c.innerHTML = '<div class="mini" title="Edytuj"></div><div class="meta"><span class="no">' + (i+1) + '.</span><span class="tag">' + E.typeLabel(o.type) + '</span>' +
+      (why ? '<span class="tag ' + (o.active===false ? 'grey' : 'mag') + '">' + why + '</span>' : '') + (o.until && vis ? '<span class="tag grey">do ' + o.until + '</span>' : '') +
+      '</div><div class="ttl">' + E.esc(slideTitle(o)) + '</div><div class="acts">' +
+      '<label class="sw" title="Wyświetlaj na ekranie"><input type="checkbox" data-act="toggle"' + (o.active!==false ? ' checked' : '') + '><i></i></label><span class="sp"></span>' +
+      '<button class="ico handle" type="button" data-act="up" title="Wyżej" aria-label="Przesuń wyżej">↑</button><button class="ico" type="button" data-act="down" title="Niżej" aria-label="Przesuń niżej">↓</button>' +
+      '<button class="ico" type="button" data-act="dup" title="Duplikuj" aria-label="Duplikuj">⧉</button><button class="ico" type="button" data-act="edit" title="Edytuj" aria-label="Edytuj">✎</button><button class="ico del" type="button" data-act="del" title="Usuń" aria-label="Usuń">✕</button></div>';
+    box.appendChild(c);
+    E.mini($('.mini', c), {kind:'slide', item:o, duration:10}, st);
+  });
+  var add = document.createElement('button'); add.type = 'button'; add.className = 'addcard'; add.innerHTML = '<span>+</span>Nowy slajd'; add.onclick = function(){ openEditor(-1); };
+  box.appendChild(add);
+}
+$('#add-slide').onclick = function(){ openEditor(-1); };
+$('#slides').addEventListener('click', function(e){
+  var c = e.target.closest('.card'); if (!c) return; var i = +c.dataset.i, a = e.target.closest('[data-act]'), act = a && a.getAttribute('data-act');
+  if (e.target.closest('.mini') || act==='edit') return openEditor(i);
+  if (act==='up' && i>0){ move(i, i-1); }
+  else if (act==='down' && i<st.slides.length-1){ move(i, i+1); }
+  else if (act==='dup'){ var cp = JSON.parse(JSON.stringify(st.slides[i])); cp.id = E.uid(); st.slides.splice(i+1, 0, cp); changed(); renderSlides(); }
+  else if (act==='del'){ if (confirm('Usunąć slajd „' + slideTitle(st.slides[i]) + '”?')){ st.slides.splice(i, 1); changed(); renderSlides(); } }
+});
+$('#slides').addEventListener('change', function(e){ if (e.target.getAttribute('data-act')==='toggle'){ var i = +e.target.closest('.card').dataset.i; st.slides[i].active = e.target.checked; changed(); renderSlides(); } });
+function move(a, b){ var x = st.slides.splice(a, 1)[0]; st.slides.splice(b, 0, x); changed(); renderSlides(); }
+/* przeciąganie */
+var dragI = -1;
+$('#slides').addEventListener('dragstart', function(e){ var c = e.target.closest('.card'); if (!c) return; dragI = +c.dataset.i; c.classList.add('drag'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', dragI); } catch(x){} });
+$('#slides').addEventListener('dragend', function(){ $$('.card').forEach(function(c){ c.classList.remove('drag','over'); }); dragI = -1; });
+$('#slides').addEventListener('dragover', function(e){ var c = e.target.closest('.card'); if (dragI<0 || !c) return; e.preventDefault(); $$('.card.over').forEach(function(x){ if (x!==c) x.classList.remove('over'); }); c.classList.add('over'); });
+$('#slides').addEventListener('drop', function(e){ var c = e.target.closest('.card'); if (dragI<0 || !c) return; e.preventDefault(); var to = +c.dataset.i; if (to!==dragI) move(dragI, to); });
+
+/* ---------- edytor slajdu ---------- */
+var FIELDS = {
+  image:['image','duration','dates'],
+  info:['bg','chip','title','accent','body','facts','duration','dates'],
+  welcome:['bg','chip','title','accent','term','place','body','duration','dates'],
+  number:['bg','chip','number','title','accent','body','duration','dates'],
+  countdown:['bg','chip','title','accent','target','place','duration','dates'],
+  qr:['bg','chip','title','accent','body','qr','facts','duration','dates'],
+  photo:['image','chip','title','accent','term','place','body','duration','dates']
+};
+var HELP = {
+  chip:['Etykieta','np. Biuro Karier, Rekrutacja, Ważne'], title:['Tytuł',''], accent:['Wyróżnienie','druga linia tytułu, cienką kursywą (opcjonalnie)'],
+  body:['Treść','krótko, 1-3 zdania'], term:['Termin','np. 12 grudnia 2026 | godz. 9:00'], place:['Miejsce','np. Aula A, ul. Gagarina 13a'], more:['Więcej','np. econ.umk.pl/rekrutacja'],
+  number:['Liczba','np. 6%, 1 200, 25+'], qr:['Link do kodu QR','adres strony, na którą prowadzi kod'], target:['Odliczaj do',''], image:['Grafika','']
+};
+function openEditor(i){
+  editIdx = i;
+  edit = i>=0 ? JSON.parse(JSON.stringify(st.slides[i])) : {id:E.uid(), type:'', bg:'blue', active:true};
+  $('#dlgtitle').textContent = i>=0 ? 'Edycja slajdu ' + (i+1) : 'Nowy slajd';
+  $('#d-del').hidden = i<0; $('#d-active').checked = edit.active!==false;
+  drawFields(); $('#dlg').showModal();
+  setTimeout(function(){ var f = $('#dlgfields input[type=text], #dlgfields textarea'); if (f && edit.type) f.focus(); }, 50);
+}
+function inp(k, type, extra){ return '<input type="' + (type||'text') + '" id="d-' + k + '" data-k="' + k + '" value="' + E.esc(edit[k]||'') + '"' + (extra||'') + '>'; }
+function fld(k, html, wide){ var h = HELP[k] || [k,'']; return '<div class="f"><label for="d-' + k + '">' + h[0] + (h[1] ? ' <small>(' + h[1] + ')</small>' : '') + '</label>' + html + '</div>'; }
+function drawFields(){
+  var h = '<div class="f"><span class="lbl">Rodzaj slajdu</span><div class="types">' + E.TYPES.map(function(t){ return '<button type="button" data-type="' + t[0] + '" aria-pressed="' + (edit.type===t[0]) + '">' + t[1] + '<small>' + TYPE_INFO[t[0]] + '</small></button>'; }).join('') + '</div></div>';
+  if (!edit.type){ $('#dlgfields').innerHTML = h + '<p class="note">Wybierz rodzaj, a pojawią się pola do uzupełnienia.</p>'; $('#d-ok').disabled = true; renderDlgPrev(); return; }
+  $('#d-ok').disabled = false;
+  (FIELDS[edit.type]||[]).forEach(function(k){
+    if (k==='bg') h += '<div class="f"><span class="lbl">Tło</span><div class="seg" id="d-bg"><button type="button" data-bg="blue" aria-pressed="' + (edit.bg!=='white') + '">Niebieskie</button><button type="button" data-bg="white" aria-pressed="' + (edit.bg==='white') + '">Białe</button></div></div>';
+    else if (k==='body') h += fld('body', '<textarea id="d-body" data-k="body" rows="3">' + E.esc(edit.body||'') + '</textarea>');
+    else if (k==='title') h += fld('title', '<textarea id="d-title" data-k="title" rows="2" style="min-height:60px">' + E.esc(edit.title||'') + '</textarea>');
+    else if (k==='image'){
+      var bad = edit.image && /drive\.google\.com\/drive\/folders/.test(edit.image);
+      h += '<div class="f"><label for="d-image">' + (edit.type==='photo' ? 'Zdjęcie' : 'Grafika 1920×1080') + ' <small>(wgraj plik albo wklej link: z Dysku Google, ze strony lub ścieżkę grafiki/nazwa.jpg)</small></label>' +
+        '<div class="imgrow">' + inp('image','text',' placeholder="https://… albo grafiki/plakat.jpg"') + '<label class="btn">Wgraj plik<input type="file" id="d-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden></label></div>' +
+        '<div class="note' + (bad ? ' bad' : '') + '" id="d-imgnote">' + (bad ? 'To link do folderu, a potrzebny jest link do jednego pliku.' : 'Plik trafi na Dysk Google właściciela arkusza i dostanie link.') + '</div></div>';
+    }
+    else if (k==='duration') h += '<div class="row"><div class="f"><label for="d-duration">Czas wyświetlania <small>(sekundy, puste = domyślny)</small></label>' + inp('duration','number',' min="3" max="600" placeholder="' + (edit.type==='image' ? st.settings.imgDur : st.settings.infoDur) + '"') + '</div><div></div></div>';
+    else if (k==='dates') h += '<details class="more"' + (edit.from||edit.until ? ' open' : '') + '><summary>Wyświetlaj tylko w wybranym okresie</summary><div class="row"><div class="f"><label for="d-from">Od dnia</label>' + inp('from','date') + '</div><div class="f"><label for="d-until">Do dnia <small>(włącznie)</small></label>' + inp('until','date') + '</div></div></details>';
+    else if (k==='facts') h += '<details class="more"' + (edit.term||edit.place||edit.more ? ' open' : '') + '><summary>Szczegóły pod treścią (termin, miejsce, więcej)</summary>' + fld('term', inp('term')) + fld('place', inp('place')) + fld('more', inp('more')) + '</details>';
+    else if (k==='target') h += fld('target', inp('target','datetime-local',' required'));
+    else if (k==='qr') h += fld('qr', inp('qr','url',' placeholder="https://"'));
+    else h += fld(k, inp(k));
+  });
+  $('#dlgfields').innerHTML = h;
+  renderDlgPrev();
+}
+$('#dlgfields').addEventListener('click', function(e){
+  var t = e.target.closest('[data-type]'); if (t){ edit.type = t.getAttribute('data-type'); drawFields(); return; }
+  var b = e.target.closest('[data-bg]'); if (b){ edit.bg = b.getAttribute('data-bg'); $$('#d-bg button').forEach(function(x){ x.setAttribute('aria-pressed', x===b); }); renderDlgPrev(); }
+});
+var pvT;
+$('#dlgfields').addEventListener('input', function(e){
+  var k = e.target.getAttribute('data-k'); if (!k) return; edit[k] = e.target.value;
+  if (k==='image'){ var n = $('#d-imgnote'), bad = /drive\.google\.com\/drive\/folders/.test(edit.image); n.classList.toggle('bad', bad); n.textContent = bad ? 'To link do folderu, a potrzebny jest link do jednego pliku.' : (E.imgUrl(edit.image)!==edit.image.trim() ? 'Link z Dysku Google rozpoznany. Plik musi być udostępniony „każdemu, kto ma link”.' : 'Plik trafi na Dysk Google właściciela arkusza i dostanie link.'); }
+  clearTimeout(pvT); pvT = setTimeout(renderDlgPrev, 220);
+});
+$('#dlgfields').addEventListener('change', function(e){ if (e.target.id==='d-file' && e.target.files[0]) upload(e.target.files[0]); });
+$('#d-active').addEventListener('change', function(){ edit.active = this.checked; });
+function renderDlgPrev(){
+  var host = $('#dlgprev'); E.unobserve(host);
+  if (!edit.type){ host.innerHTML = ''; return; }
+  E.mini(host, {kind:'slide', item:edit, duration:10}, st);
+}
+$('#d-cancel').onclick = function(){ $('#dlg').close(); };
+$('#d-del').onclick = function(){ if (editIdx>=0 && confirm('Usunąć ten slajd?')){ st.slides.splice(editIdx, 1); $('#dlg').close(); changed(); renderSlides(); } };
+$('#dlgform').addEventListener('submit', function(e){
+  e.preventDefault();
+  if (!edit.type) return;
+  if (edit.type==='image' && !String(edit.image||'').trim()){ toast('Wgraj grafikę albo wklej link.', 'bad'); return; }
+  if (edit.type==='countdown' && !edit.target){ toast('Podaj datę i godzinę, do której liczyć.', 'bad'); return; }
+  ['title','accent','body','chip','term','place','more','number','qr','image'].forEach(function(k){ if (edit[k]!=null) edit[k] = String(edit[k]).replace(/\s+$/,''); });
+  if (editIdx>=0) st.slides[editIdx] = edit; else st.slides.push(edit);
+  $('#dlg').close(); changed(); renderSlides();
+});
+
+/* wgrywanie grafiki: zmniejszenie do 1920 px i wysłanie na Dysk przez skrypt */
+function upload(file){
+  var note = $('#d-imgnote');
+  if (!E.connected()){ note.className = 'note bad'; note.textContent = 'Tryb pokazowy: wgrywanie działa po podłączeniu arkusza. Możesz wkleić link.'; return; }
+  if (!/^image\//.test(file.type)){ note.className = 'note bad'; note.textContent = 'To nie jest plik graficzny.'; return; }
+  note.className = 'note'; note.textContent = 'Przygotowuję plik…';
+  shrink(file).then(function(r){
+    note.textContent = 'Wysyłam na Dysk Google (' + Math.round(r.size/1024) + ' KB)…';
+    return E.post({a:'grafika', pin:pin, name:file.name.replace(/\.\w+$/, '') + (r.ext||''), mime:r.mime, data:r.data});
+  }).then(function(res){
+    edit.image = res.url; var i = $('#d-image'); if (i) i.value = res.url;
+    note.className = res.udostepniono ? 'note' : 'note bad';
+    note.textContent = res.udostepniono ? 'Wgrano. Grafika jest na Dysku w folderze „Ekrany WNEiZ - grafiki”.' : 'Wgrano, ale Dysk nie pozwolił udostępnić pliku publicznie (ustawienia domeny UMK). Ekrany mogą go nie wyświetlić - użyj grafiki z serwera (folder grafiki/).';
+    renderDlgPrev();
+  }).catch(function(err){ note.className = 'note bad'; note.textContent = 'Nie udało się wgrać: ' + err.message; });
+}
+function shrink(file){
+  return new Promise(function(res, rej){
+    if (file.type==='image/gif'){ var fr = new FileReader(); fr.onload = function(){ res({data:fr.result, mime:'image/gif', size:file.size, ext:'.gif'}); }; fr.onerror = rej; fr.readAsDataURL(file); return; }
+    var img = new Image(), url = URL.createObjectURL(file);
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var k = Math.min(1, 1920/img.naturalWidth, 1920/img.naturalHeight), w = Math.round(img.naturalWidth*k), h = Math.round(img.naturalHeight*k);
+      var c = document.createElement('canvas'); c.width = w; c.height = h; c.getContext('2d').drawImage(img, 0, 0, w, h);
+      var d = c.toDataURL('image/webp', 0.88), mime = 'image/webp', ext = '.webp';
+      if (d.indexOf('data:image/webp')!==0){ d = c.toDataURL('image/jpeg', 0.88); mime = 'image/jpeg'; ext = '.jpg'; }
+      res({data:d, mime:mime, size:Math.round(d.length*0.75), ext:ext});
+    };
+    img.onerror = function(){ rej(new Error('nie można odczytać obrazu')); };
+    img.src = url;
+  });
+}
+
+/* ---------- wydarzenia ---------- */
+function renderEvents(){
+  var tb = $('#evbody'), now = new Date();
+  st.events.sort(function(a,b){ return (a.date+(a.time||'99')).localeCompare(b.date+(b.time||'99')); });
+  tb.innerHTML = st.events.map(function(e, i){
+    var past = E.evEnd(e) < now, on = !past && e.active!==false;
+    return '<tr data-i="' + i + '" class="' + (past ? 'past' : '') + '"><td class="w-d"><input class="inp" type="date" data-e="date" value="' + E.esc(e.date) + '" aria-label="Data"><span class="evstat' + (on ? ' on' : '') + '">' + (past ? 'minęło' : e.active===false ? 'ukryte' : E.rel(e, now).t) + '</span></td>' +
+      '<td class="w-t"><input class="inp" type="time" data-e="time" value="' + E.esc(e.time) + '" aria-label="Godzina"></td>' +
+      '<td class="full"><input class="inp" type="text" data-e="title" value="' + E.esc(e.title) + '" placeholder="Tytuł wydarzenia" aria-label="Tytuł"></td>' +
+      '<td class="full"><input class="inp" type="text" data-e="desc" value="' + E.esc(e.desc) + '" placeholder="Krótki opis (opcjonalnie)" aria-label="Opis"></td>' +
+      '<td><input class="inp" type="text" data-e="place" value="' + E.esc(e.place) + '" placeholder="Sala / miejsce" aria-label="Miejsce"></td>' +
+      '<td class="w-a"><label class="sw" title="Pokaż na ekranie"><input type="checkbox" data-e="active"' + (e.active!==false ? ' checked' : '') + '><i></i></label></td>' +
+      '<td class="w-x"><button class="ico del" type="button" data-e="del" title="Usuń" aria-label="Usuń wydarzenie">✕</button></td></tr>';
+  }).join('') || '<tr><td colspan="7" style="padding:26px;text-align:center;color:#5d7aa6">Brak wydarzeń. Kliknij „Dodaj wydarzenie”.</td></tr>';
+}
+$('#evbody').addEventListener('input', function(e){ var k = e.target.getAttribute('data-e'), tr = e.target.closest('tr'); if (!k || !tr || k==='active') return; st.events[+tr.dataset.i][k] = e.target.value; changed(); });
+$('#evbody').addEventListener('change', function(e){ var k = e.target.getAttribute('data-e'), tr = e.target.closest('tr'); if (!tr) return; if (k==='active'){ st.events[+tr.dataset.i].active = e.target.checked; changed(); } if (k==='date' || k==='time' || k==='active') renderEvents(); });
+$('#evbody').addEventListener('click', function(e){ if (e.target.getAttribute('data-e')!=='del') return; var i = +e.target.closest('tr').dataset.i; st.events.splice(i, 1); changed(); renderEvents(); });
+$('#ev-add').onclick = function(){
+  var d = new Date(); d.setDate(d.getDate()+7);
+  st.events.push({id:E.uid(), active:true, date:E.ymd(d), time:'', title:'', desc:'', place:''}); changed(); renderEvents();
+  var rows = $$('#evbody tr'); rows.forEach(function(r){ var t = $('[data-e=title]', r); if (t && !t.value){ t.focus(); r.scrollIntoView({block:'center'}); } });
+};
+$('#ev-clean').onclick = function(){ var now = new Date(), n = st.events.length; st.events = st.events.filter(function(e){ return E.evEnd(e) >= now; }); if (n !== st.events.length){ changed(); renderEvents(); toast('Usunięto minione: ' + (n - st.events.length)); } else toast('Nie ma minionych wydarzeń'); };
+
+/* ---------- ustawienia i pilny komunikat ---------- */
+function renderSettings(){
+  var s = st.settings;
+  $$('[data-set]').forEach(function(el){ var k = el.getAttribute('data-set'), v = s[k]; if (el.type==='checkbox') el.checked = E.yes(v); else el.value = v==null ? '' : v; });
+  $$('#barseg button').forEach(function(b){ var v = b.getAttribute('data-v'); b.setAttribute('aria-pressed', v.charAt(0).toLowerCase() === String(s.bar||'p').trim().charAt(0).toLowerCase()); });
+  renderAlertPrev();
+}
+document.addEventListener('input', function(e){ setFromField(e.target, false); });
+document.addEventListener('change', function(e){ setFromField(e.target, true); });
+function setFromField(el, isChange){
+  var k = el.getAttribute && el.getAttribute('data-set'); if (!k || !st) return;
+  if (el.type==='checkbox'){ if (!isChange) return; st.settings[k] = el.checked ? 'TAK' : 'NIE'; }
+  else st.settings[k] = el.value;
+  if (k==='alertOn' && el.checked){
+    st.settings.alertSince = E.ymd(new Date()) + ' ' + E.hm();
+    var u = E.parseDate(st.settings.alertUntil); if (u && u <= new Date()){ st.settings.alertUntil = ''; $('#s-alertUntil').value = ''; toast('Wyczyszczono minioną datę automatycznego wyłączenia.'); }
+  }
+  if (k==='alertUntil'){ var u2 = E.parseDate(el.value); $('#s-alertUntil').style.borderColor = u2 && u2 <= new Date() ? '#c0282f' : ''; }
+  if (k==='alertOn' && el.checked && !String(st.settings.alertText||'').trim()) $('#s-alertText').focus();
+  changed(); if (/^alert/.test(k)) renderAlertPrev();
+}
+$('#barseg').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return; st.settings.bar = b.getAttribute('data-v'); $$('#barseg button').forEach(function(x){ x.setAttribute('aria-pressed', x===b); }); changed(); });
+var apT;
+function renderAlertPrev(){
+  clearTimeout(apT); apT = setTimeout(function(){
+    var host = $('#alertprev'); if (!host || host.closest('[hidden]')) return; E.unobserve(host);
+    var s2 = JSON.parse(JSON.stringify(st)); if (!String(s2.settings.alertText||'').trim()) s2.settings.alertText = 'Tu pojawi się treść pilnego komunikatu';
+    E.mini(host, {kind:'alert', duration:12}, s2);
+    var f = document.createElement('div'); f.className = 'ek-foot urgent'; f.innerHTML = '<div class="ek-prog"></div><div class="ek-frow"><span class="ek-ftag">' + E.esc(s2.settings.alertLabel||'PILNE') + '</span><div class="ek-ftrack"><div class="ek-ftext">' + E.esc(s2.settings.alertText) + '</div></div></div>';
+    host.firstChild.appendChild(f);
+  }, 150);
+}
+$('#setpin').onclick = function(){
+  var p = $('#newpin').value.trim();
+  if (!/^\d{4,12}$/.test(p)){ toast('PIN musi mieć od 4 do 12 cyfr.', 'bad'); return; }
+  if (!E.connected()){ toast('Tryb pokazowy: zmiana PIN-u działa po podłączeniu arkusza.', 'bad'); return; }
+  E.post({a:'pin', pin:pin, nowy:p}).then(function(){ pin = p; try { sessionStorage.setItem('ek-pin', p); } catch(x){} $('#newpin').value = ''; toast('PIN zmieniony. Przekaż nowy PIN pozostałym osobom.', 'ok'); })
+    .catch(function(err){ toast(err.message, 'bad'); });
+};
+/* kopia JSON */
+$('#exp').onclick = function(){
+  var data = {format:'ekrany-wneiz', wersja:2, zapisano:new Date().toISOString(), dane:E.denormalize(st)};
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 1)], {type:'application/json'}));
+  a.download = 'ekrany-wneiz-kopia-' + E.ymd(new Date()) + '.json'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+};
+$('#imp').onchange = function(){
+  var f = this.files[0]; this.value = ''; if (!f) return;
+  f.text().then(function(t){
+    var j = JSON.parse(t); if (!j || j.format!=='ekrany-wneiz' || !j.dane) throw new Error('to nie jest kopia ekranów WNEiZ');
+    var d = j.dane, toObjs = function(tb){ return (tb.rows||[]).map(function(r){ var o = {}; tb.headers.forEach(function(h, i){ o[h] = r[i]; }); return o; }); };
+    var ns = E.normalize({slajdy:toObjs(d.slajdy), wydarzenia:toObjs(d.wydarzenia), ustawienia:d.ustawienia});
+    ns.rev = rev; ns.updated = st.updated; st = ns; changed(); renderAll(); setDirty(true);
+    toast('Wczytano kopię z ' + String(j.zapisano||'').slice(0,10) + '. Kliknij Zapisz zmiany, aby wysłać ją do arkusza.', 'ok');
+  }).catch(function(err){ toast('Nie udało się wczytać: ' + err.message, 'bad'); });
+};
+document.addEventListener('keydown', function(e){
+  if ((e.ctrlKey||e.metaKey) && e.key==='s' && !$('#app').hidden){ e.preventDefault(); if (dirty && !saving) save(false); }
+  if (player && !$('[data-pane=podglad]').hidden && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)){ if (e.key==='ArrowRight') player.go(1); if (e.key==='ArrowLeft') player.go(-1); }
+});
+})();
+</script>
+</body>
+</html>
